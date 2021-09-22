@@ -1,0 +1,84 @@
+version: '3.7'
+
+services:
+  core:
+    build:
+      context: ./core
+    container_name: core
+    ports:
+      - 8000:8000
+    volumes:
+      - ./core:/core
+    working_dir: /core
+    command: python manage.py runserver 0:8000
+    environment:
+      - API_ENTRYPOINT=http://localhost:8000/graphql
+    links:
+      - postgres
+      - redis
+    depends_on:
+      - postgres
+      - redis
+  postgres:
+    image: postgres:11.2-alpine
+    container_name: postgres
+    restart: always
+    volumes:
+      - pgdata:/var/lib/postgresql/data/
+    ports:
+      - 5432:5432
+  adminer:
+    image: adminer
+    container_name: adminer
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    ports:
+      - 9000:8080
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    restart: always
+    ports: 
+      - 1025:1025
+      - 8025:8025
+  redis:
+    image: 'redis:alpine'
+    container_name: redis
+    ports:
+      - 6379:6379
+  celery:
+    build:
+      context: ./core
+    container_name: celery
+    volumes:
+      - ./core:/core
+    working_dir: /core
+    command: celery -A core worker -l info --concurrency=10
+    environment:
+      - API_ENTRYPOINT=http://localhost:8000/graphql
+    links:
+      - core
+    depends_on:
+      - core
+  celery-beat:
+    build:
+      context: ./core
+    restart: on-failure
+    container_name: celery-beat
+    volumes:
+      - ./core:/core
+    working_dir: /core
+    command: celery -A core beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    environment:
+      - API_ENTRYPOINT=http://localhost:8000/graphql
+    links:
+      - core
+    depends_on:
+      - core
+  
+
+volumes:
+  pgdata:

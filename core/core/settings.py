@@ -137,11 +137,14 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'mailhog'
 EMAIL_PORT = 1025
 
-REDIS_HOST = 'redis'
-REDIS_PORT = 6379
+RABBIT_HOST = 'rabbit'
+RABBIT_PORT = 15672
 
-CELERY_BROKER_URL = 'redis://%s:%s' % (REDIS_HOST, REDIS_PORT)
-CELERY_RESULT_BACKEND = 'redis://%s:%s' % (REDIS_HOST, REDIS_PORT)
+# CELERY_BROKER_URL = 'amqp://%s:%s' % (RABBIT_HOST, RABBIT_PORT)
+# CELERY_RESULT_BACKEND = 'amqp://%s:%s' % (RABBIT_HOST, RABBIT_PORT)
+
+CELERY_BROKER_URL = "amqp://admin:rabbitsion@rabbit:15672/"
+CELERY_RESULT_BACKEND = "amqp://admin:rabbitsion@rabbit:15672/"
 
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
